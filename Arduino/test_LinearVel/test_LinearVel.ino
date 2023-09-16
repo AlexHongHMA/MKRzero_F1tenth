@@ -1,15 +1,18 @@
 /*
-Important Note: Alexander Hong
+Important Noteby::Alexander Hong
 
-Here, our RPM sensor is actually recording data from large Gear A (not the pinion from brushless motore). Therefore, you don't need
+Here, our RPM sensor is actually recording data from large Gear A (not the pinion from brushless motor). Therefore, we don't need
 to calculate angular velocity of gear B (pinion gear). 
 
-if your RPM sensor is recording data from your motor directly, you need to apply this equation 
+if the RPM sensor is recording data from the motor's pinion or from the motor's shelf directly, 
+we need to apply this equation 
+          
           w(A) = w(B)/gearRatio (check the equation back) where :: w(B) = 2*PI*rpm/60
 
 In case, if we need to calculate GearRatio related equations, 
         gearRatio = Teeth of Driven/ Teeth of Driver
-        In this robot - pinion -> 23T , Driven Gear -> 86T,48P  
+        
+Gear Information for this robot - pinion -> 23T , Driven Gear -> 86T,48P  
 */
 
 
