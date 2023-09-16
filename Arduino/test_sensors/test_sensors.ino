@@ -4,17 +4,27 @@
  * Original Arthur::Paul Clark Based on original code by: Owen Lyke @ SparkFun Electronics 
  * Original Creation Date: April 17 2019
  
- * Code was Improved by Professor Benjamas Panomruttanarug @ KMUTT
+ * Code was Improved by Professor Benjamas Panomruttanarug "BP" 
+ * Department of Control System and Instrumention Engineering "INC" @ KMUTT
+ * Cosin Lab (COntrol System and INstruction Lab) 
 
  ***** Professor's Note *****
  * BP trying to combine imu (icm20948) with microros on ROS2
  * Testing with MKR zero arduino board
  
- * Edited by Alexander Hong (Htet Myat Aung) 66070504024 Bachelor Student @ KMUTT 
- * Removed QUAT_ANIMATION Library and usages 
- * Added ROS codes to Echo Linear Velocity values from Hall Sensor mounted on Driven Gear of F1tenth Car
+ * Edited by Alexander Hong "AlexHong" (Htet Myat Aung) 
+ * Edited Date: Sept 16/09/2023
+ * Bachelor Student @ KMUTT 
+ * Department of Control System and Instrumention Engineering "INC" @ KMUTT
+ * Cosin Lab (COntrol System and INstruction Lab) 
 
  ***** Important Noteby::Alexander Hong ***** 
+ * 
+ * Removed QUAT_ANIMATION Library and usages 
+ * Added ROS codes to Echo Linear Velocity values from Hall Sensor mounted on Driven Gear of F1tenth Car
+ * Create Functions for more clean code
+ * Myth : Removed all Serial.println - seem causing to interrupt the output
+
 
  * Here, our RPM sensor is actually recording data from large Gear A (not the pinion from brushless motor). 
  * Therefore, we don't need to calculate angular velocity of gear B (pinion gear). 
@@ -55,16 +65,16 @@ rcl_node_t node;
 rcl_publisher_t string_publisher;
 rcl_publisher_t pedometer_publisher;
 
-rcl_publisher_t xvel_publisher;                //Editedby::AlexHong
+rcl_publisher_t xvel_publisher;                 //Editedby::AlexHong
 rcl_publisher_t yaw_publisher;
-rcl_publisher_t err_publisher;
+//rcl_publisher_t err_publisher;                //Editedby::AlexHong (Remove Comment to test with Error Message)
 
 std_msgs__msg__String string_msg;
 std_msgs__msg__Int32 pedometer_msg;
 
-std_msgs__msg__Float32 xvel_msg;      //Editedby::AlexHong
+std_msgs__msg__Float32 xvel_msg;              //Editedby::AlexHong
 std_msgs__msg__Float32 yaw_msg;
-std_msgs__msg__Float32 err_msg;
+//std_msgs__msg__Float32 err_msg;               //Editedby::AlexHong (Remove Comment to test with Error Message)
 
 //Topic Name Declaration::Editedby::AlexHong
 const char * yaw_tpName = "yaw";
@@ -72,7 +82,6 @@ const char * xvel_tpName = "xvel";
 //const char * err_tpName = "err";
 
 //Message Type Support::Editedby::AlexHong
-//const rosidl_message_type_support_t * type_support = ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs,msg,Float32);
 const rosidl_message_type_support_t * type_support =
   ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32);
 
@@ -133,7 +142,6 @@ void xvel_data( ){
 // Calculate RPM
     int rpm = (pulseCount * 60000) / (elapsedTime); // Multiplying by 60,000 is used to convert the time from milliseconds to minutes (since there are 60,000 milliseconds in a minute)
 
-
 // Calculate Angular Velocity of Driven Gear
     float angularVelocityGearA = (2 * PI * rpm) / 60 ; // angular velocity of Pinion from Brushless Motor in rad/s // Divided by 60 to change it to second
 
@@ -154,8 +162,6 @@ void xvel_data( ){
 
 void yaw_data( ){
 
-  //BP publish messages
-  //Editedby::AlexHong
   // Read any DMP data waiting in the FIFO
   // Note:
   //    readDMPdataFromFIFO will return ICM_20948_Stat_FIFONoDataAvail if no data is available.
@@ -190,12 +196,12 @@ void yaw_data( ){
 
       double q2sqr = q2 * q2;
 
-//      // roll (x-axis rotation)
+//      // roll (x-axis rotation)                         //::Uncomment this code to use Roll Data::Noteby::AlexHong
 //      double t0 = +2.0 * (q0 * q1 + q2 * q3);
 //      double t1 = +1.0 - 2.0 * (q1 * q1 + q2sqr);
 //      double roll = atan2(t0, t1) * 180.0 / PI;
 //
-//      // pitch (y-axis rotation)
+//      // pitch (y-axis rotation)                        //::Uncomment this code to use Pitch Data::Noteby::AlexHong
 //      double t2 = +2.0 * (q0 * q2 - q3 * q1);
 //      t2 = t2 > 1.0 ? 1.0 : t2;
 //      t2 = t2 < -1.0 ? -1.0 : t2;
@@ -205,7 +211,6 @@ void yaw_data( ){
       double t3 = +2.0 * (q0 * q3 + q1 * q2);
       double t4 = +1.0 - 2.0 * (q2sqr + q3 * q3);
       double yaw = atan2(t3, t4) * 180.0 / PI;
-
 
       //BP publish messages
       yaw_msg.data = yaw;
@@ -321,7 +326,7 @@ void setup()
   success &= (myICM.resetFIFO() == ICM_20948_Stat_Ok);
 
   
-  // Editedby::AlexHong
+// Editedby::AlexHong
 // RPM Sensor Connection
   pinMode(sensorPin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(sensorPin), countPulses, CHANGE);
@@ -341,13 +346,12 @@ void setup()
   // create node
   RCCHECK(rclc_node_init_default(&node, "micro_ros_arduino_node", "", &support));
 
-  
   // create publisher BP
   // * Editedby::AlexHong
   // * Edited Note -> Publisher for Linear Velocity
 
-// Test_Error_Message
 /*
+ ***** Test_Error_Message *****
  * Important Note 
  * Error Msg Value -> 0 ( Not Work )
  * Error Msg Value -> 1 ( Work )
