@@ -65,34 +65,35 @@ rcl_node_t node;
 rcl_publisher_t string_publisher;
 rcl_publisher_t pedometer_publisher;
 
-rcl_publisher_t xvel_publisher;                 //Editedby::AlexHong
-rcl_publisher_t yaw_publisher;            
-//rcl_publisher_t err_publisher;                //Editedby::AlexHong (Remove Comment to test with Error Message)
+rcl_publisher_t linearVel_publisher;                 //Editedby::AlexHong
+rcl_publisher_t yaw_publisher;   
 rcl_publisher_t xpos_publisher;                 //Editedby::AlexHong
-rcl_publisher_t ypos_publisher;                 //Editedby::AlexHong
+rcl_publisher_t ypos_publisher;                 //Editedby::AlexHong         
+//rcl_publisher_t err_publisher;                //Editedby::AlexHong (Remove Comment to test with Error Message)
 
 std_msgs__msg__String string_msg;
 std_msgs__msg__Int32 pedometer_msg;
 
-
 //Topic Name Declaration::Editedby::AlexHong 
 std_msgs__msg__Float32 linearVel_msg;           
 std_msgs__msg__Float32 deltaYaw_msg;
-//std_msgs__msg__Float32 err_msg;               //Remove Comment to test with Error Message
 std_msgs__msg__Float32 xpos_msg;                
-std_msgs__msg__Float32 ypos_msg;                
+std_msgs__msg__Float32 ypos_msg; 
+//std_msgs__msg__Float32 err_msg;               //Remove Comment to test with Error Message
+               
 
 //Topic Name Declaration::Editedby::AlexHong
 const char * yaw_tpName = "yaw";
-const char * xvel_tpName = "linearVel";      
-//const char * err_tpName = "err";
+const char * xvel_tpName = "linearVel";    
 const char * xpos_tpName = "xpos";
-const char * ypos_tpName = "ypos";
-
+const char * ypos_tpName = "ypos";  
+//const char * err_tpName = "err";
 
 //Message Type Support::Editedby::AlexHong
 const rosidl_message_type_support_t * type_support =
   ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32);
+
+
 
 #define LED_PIN 13 //Error Check::Noteby::AlexHong
 
@@ -118,6 +119,7 @@ ICM_20948_I2C myICM; // Otherwise create an ICM_20948_I2C object
 #endif
 
 
+
 //Declaring Global Variables for RPM Sensor::Editedby::AlexHong
 
 const int sensorPin = 4;             // Connect the RPM sensor to digital pin 2 //AttachInterrupt Pins -> 0,1,4,5,6,7,8,9,A1,A2 for MKR Family Board
@@ -130,7 +132,9 @@ const int sampleInterval = 100000;  // Time interval for calculating RPM in micr
 const float wheelRadius = 0.0525;   // Wheel Diameter in meter value
 
 // Parameters for x_velocity, yaw value, previous and current yaw :: Edited by AlexHong
+
 double linear_value = 0.0;
+
 double yaw_value = 0.0;
 double previousYaw = 0.0;
 double currentYaw = 0.0;
@@ -141,6 +145,8 @@ double xpos_data = 0.0;             // X & Y Position Declaration
 double ypos_data = 0.0;             // 
 
 // End::Noteby::AlexHong
+
+
 
 // YawSensor and Linear Velocity Class::Createdby::AlexHong
 
@@ -156,7 +162,7 @@ class YawSensor{
     }
 
 
-    void setup( void )
+    void yawSetup( void )
     {
           if (myICM.status != ICM_20948_Stat_FIFOMoreDataAvail) // If more data is available then we should read it right away - and not delay
           {
@@ -184,33 +190,13 @@ class YawSensor{
         
           bool success = true; // Use success to show if the DMP configuration was successful
         
-          // Initialize the DMP. initializeDMP is a weak function. You can overwrite it if you want to e.g. to change the sample rate
+          // Initialize the DMP. initializeDMP
           success &= (myICM.initializeDMP() == ICM_20948_Stat_Ok);
         
-          // DMP sensor options are defined in ICM_20948_DMP.h
-          //    INV_ICM20948_SENSOR_ACCELEROMETER               (16-bit accel)
-          //    INV_ICM20948_SENSOR_GYROSCOPE                   (16-bit gyro + 32-bit calibrated gyro)
-          //    INV_ICM20948_SENSOR_RAW_ACCELEROMETER           (16-bit accel)
-          //    INV_ICM20948_SENSOR_RAW_GYROSCOPE               (16-bit gyro + 32-bit calibrated gyro)
-          //    INV_ICM20948_SENSOR_MAGNETIC_FIELD_UNCALIBRATED (16-bit compass)
-          //    INV_ICM20948_SENSOR_GYROSCOPE_UNCALIBRATED      (16-bit gyro)
-          //    INV_ICM20948_SENSOR_STEP_DETECTOR               (Pedometer Step Detector)
-          //    INV_ICM20948_SENSOR_STEP_COUNTER                (Pedometer Step Detector)
-          //    INV_ICM20948_SENSOR_GAME_ROTATION_VECTOR        (32-bit 6-axis quaternion)                      // <= We are using this option
-          //    INV_ICM20948_SENSOR_ROTATION_VECTOR             (32-bit 9-axis quaternion + heading accuracy)
-          //    INV_ICM20948_SENSOR_GEOMAGNETIC_ROTATION_VECTOR (32-bit Geomag RV + heading accuracy)
-          //    INV_ICM20948_SENSOR_GEOMAGNETIC_FIELD           (32-bit calibrated compass)
-          //    INV_ICM20948_SENSOR_GRAVITY                     (32-bit 6-axis quaternion)
-          //    INV_ICM20948_SENSOR_LINEAR_ACCELERATION         (16-bit accel + 32-bit 6-axis quaternion)
-          //    INV_ICM20948_SENSOR_ORIENTATION                 (32-bit 9-axis quaternion + heading accuracy)
+      
         
           // Enable the DMP Game Rotation Vector sensor
           success &= (myICM.enableDMPSensor(INV_ICM20948_SENSOR_GAME_ROTATION_VECTOR) == ICM_20948_Stat_Ok);
-        
-          // Enable any additional sensors / features
-          //success &= (myICM.enableDMPSensor(INV_ICM20948_SENSOR_RAW_GYROSCOPE) == ICM_20948_Stat_Ok);
-          //success &= (myICM.enableDMPSensor(INV_ICM20948_SENSOR_RAW_ACCELEROMETER) == ICM_20948_Stat_Ok);
-          //success &= (myICM.enableDMPSensor(INV_ICM20948_SENSOR_MAGNETIC_FIELD_UNCALIBRATED) == ICM_20948_Stat_Ok);
         
           // Configuring DMP to output data at multiple ODRs:
           // DMP is capable of outputting multiple sensor data at different rates to FIFO.
@@ -219,11 +205,6 @@ class YawSensor{
           // E.g. For a 5Hz ODR rate when DMP is running at 55Hz, value = (55/5) - 1 = 10.
           
           success &= (myICM.setDMPODRrate(DMP_ODR_Reg_Quat6, 0) == ICM_20948_Stat_Ok); // Set to the maximum
-          //success &= (myICM.setDMPODRrate(DMP_ODR_Reg_Accel, 0) == ICM_20948_Stat_Ok); // Set to the maximum
-          //success &= (myICM.setDMPODRrate(DMP_ODR_Reg_Gyro, 0) == ICM_20948_Stat_Ok); // Set to the maximum
-          //success &= (myICM.setDMPODRrate(DMP_ODR_Reg_Gyro_Calibr, 0) == ICM_20948_Stat_Ok); // Set to the maximum
-          //success &= (myICM.setDMPODRrate(DMP_ODR_Reg_Cpass, 0) == ICM_20948_Stat_Ok); // Set to the maximum
-          //success &= (myICM.setDMPODRrate(DMP_ODR_Reg_Cpass_Calibr, 0) == ICM_20948_Stat_Ok); // Set to the maximum
         
           // Enable the FIFO
           success &= (myICM.enableFIFO() == ICM_20948_Stat_Ok);
@@ -236,6 +217,8 @@ class YawSensor{
         
           // Reset FIFO
           success &= (myICM.resetFIFO() == ICM_20948_Stat_Ok);
+
+
 
 //MicroROS Initiated Here::Noteby::AlexHong         
           //BP add microROS
@@ -257,7 +240,7 @@ class YawSensor{
           // * Edited Note -> Publisher for Linear Velocity
         
           RCCHECK(rclc_publisher_init_default(
-            &xvel_publisher,
+            &linearVel_publisher,
             &node,
             type_support,
             xvel_tpName)); 
@@ -266,19 +249,25 @@ class YawSensor{
             &yaw_publisher,
             &node,
             type_support,
-            yaw_tpName)); 
+            yaw_tpName));  
 
-           RCCHECK(rclc_publisher_init_default(
-            &xpos_publisher,
-            &node,
-            type_support,
-            xpos_tpName));
+/*
+ * Only Two Publishers are able to used for now. 
+ * If it is more than two publishers, the program stops working at all
+ * Task to myself ::NeedtoFix::AlexHong
+ */
 
-           RCCHECK(rclc_publisher_init_default(
-            &ypos_publisher,
-            &node,
-            type_support,
-            ypos_tpName));            
+//          RCCHECK(rclc_publisher_init_default(
+//            &xpos_publisher,
+//            &node,
+//            type_support,
+//            xpos_tpName));
+//
+//          RCCHECK(rclc_publisher_init_default(
+//            &ypos_publisher,
+//            &node,
+//            type_support,
+//            ypos_tpName));  
      }
 
     double DeltaYaw( void ){
@@ -371,7 +360,7 @@ class linearVel_Data
 {
   public:
 
-  void setup(void){
+  void linearVelSetup(void){
     // Editedby::AlexHong
     // RPM Sensor Connection
         pinMode(sensorPin, INPUT_PULLUP);
@@ -415,10 +404,11 @@ YawSensor yawSensor;
 linearVel_Data linearVelData;
 //Class End::Editedby::AlexHong
 
+
 void setup()
-{ 
-    yawSensor.setup();
-    linearVelData.setup();
+{          
+    yawSensor.yawSetup();
+    linearVelData.linearVelSetup();
 }
 
 
@@ -426,21 +416,21 @@ void loop()
 { 
 
 // Tested::By::AlexHong::InitialTest::Pass
-//    yaw_value = yawSensor.DeltaYaw();
-    deltaYaw_msg.data = yawSensor.DeltaYaw();
+    yaw_value = yawSensor.DeltaYaw();
+    deltaYaw_msg.data = yaw_value;
     RCSOFTCHECK(rcl_publish(&yaw_publisher, &deltaYaw_msg, NULL));
   
-//    linear_value = linearVelData.get_linearVel(linear_value); 
-    linearVel_msg.data = linearVelData.get_linearVel(linear_value); 
-    RCSOFTCHECK(rcl_publish(&xvel_publisher, &linearVel_msg, NULL));
+    linear_value = linearVelData.get_linearVel(linear_value); 
+    linearVel_msg.data = linear_value; 
+    RCSOFTCHECK(rcl_publish(&linearVel_publisher, &linearVel_msg, NULL));
 
-// NOT::Tested::By::AlexHong::InitialTest::Invalid
-    xpos_data += linear_value * cos(yaw_value);
-    xpos_msg.data = xpos_data;
-    RCSOFTCHECK(rcl_publish(&xpos_publisher, &xpos_msg, NULL));
-
-    ypos_data += linear_value * sin(yaw_value);
-    ypos_msg.data = ypos_data;
-    RCSOFTCHECK(rcl_publish(&ypos_publisher, &ypos_msg, NULL));
+// Tested::NotWorking::By::AlexHong::InitialTest::Failed::OnlyTwoPublisherWorked
+//    xpos_data += linear_value * cos(yaw_value);
+//    xpos_msg.data = xpos_data;
+//    RCSOFTCHECK(rcl_publish(&xpos_publisher, &xpos_msg, NULL));
+//
+//    ypos_data += linear_value * sin(yaw_value);
+//    ypos_msg.data = ypos_data;
+//    RCSOFTCHECK(rcl_publish(&ypos_publisher, &ypos_msg, NULL));
        
 }
