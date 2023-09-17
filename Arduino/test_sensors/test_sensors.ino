@@ -73,7 +73,8 @@ std_msgs__msg__String string_msg;
 std_msgs__msg__Int32 pedometer_msg;
 
 std_msgs__msg__Float32 xvel_msg;              //Editedby::AlexHong
-std_msgs__msg__Float32 yaw_msg;
+std_msgs__msg__Float32 pyaw_msg;
+std_msgs__msg__Float32 cyaw_msg;
 //std_msgs__msg__Float32 err_msg;               //Editedby::AlexHong (Remove Comment to test with Error Message)
 
 //Topic Name Declaration::Editedby::AlexHong
@@ -122,6 +123,12 @@ const int sampleInterval = 1000; // Time interval for calculating RPM in millise
 // Vehicle's Wheel Parameter
 const float wheelRadius = 0.0525; // Wheel Diameter in meter value
 
+// Parameters for x_velocity, yaw value, previous and current yaw;
+double xvel_value = 0.0;
+double yaw_value = 0.0;
+double previous_yaw = 0.0;
+double current_yaw = 0.0;
+
 // End::Noteby::AlexHong
 
 void error_loop(){
@@ -131,7 +138,7 @@ void error_loop(){
   }
 }
 
-void xvel_data( ){
+double xvel_data( double linear_vel ){
   
   unsigned long currentTime = millis();
   unsigned long elapsedTime = currentTime - lastTime;
@@ -143,24 +150,23 @@ void xvel_data( ){
     int rpm = (pulseCount * 60000) / (elapsedTime); // Multiplying by 60,000 is used to convert the time from milliseconds to minutes (since there are 60,000 milliseconds in a minute)
 
 // Calculate Angular Velocity of Driven Gear
-    float angularVelocityGearA = (2 * PI * rpm) / 60 ; // angular velocity of Pinion from Brushless Motor in rad/s // Divided by 60 to change it to second
+    double angularVelocityGearA = (2 * PI * rpm) / 60 ; // angular velocity of Pinion from Brushless Motor in rad/s // Divided by 60 to change it to second
 
 // Calculate Linear Velocity
-    float linear_vel = angularVelocityGearA * wheelRadius; // linear velocity of gear A in Meter/sec
+    double linear_vel = angularVelocityGearA * wheelRadius; // linear velocity of gear A in Meter/sec
     
     // Reset pulse count and update last time
 
-    xvel_msg.data = linear_vel;
-    RCSOFTCHECK(rcl_publish(&xvel_publisher, &xvel_msg, NULL));
-
     pulseCount = 0;
     lastTime = currentTime;
+
+    return linear_vel;
     
-    }
-  }
+    } else return linear_vel;
+  } else return linear_vel;
 }
 
-void yaw_data( ){
+double yaw_data( double yaw ){
 
   // Read any DMP data waiting in the FIFO
   // Note:
@@ -210,15 +216,12 @@ void yaw_data( ){
       // yaw (z-axis rotation)
       double t3 = +2.0 * (q0 * q3 + q1 * q2);
       double t4 = +1.0 - 2.0 * (q2sqr + q3 * q3);
-      double yaw = atan2(t3, t4) * 180.0 / PI;
-
-      //BP publish messages
-      yaw_msg.data = yaw;
-      RCSOFTCHECK(rcl_publish(&yaw_publisher, &yaw_msg, NULL));
-
+      double updated_yaw = atan2(t3, t4) * 180.0 / PI;
+      
+      return updated_yaw;
     }
   }
-
+  
   if (myICM.status != ICM_20948_Stat_FIFOMoreDataAvail) // If more data is available then we should read it right away - and not delay
   {
     delay(10);
@@ -375,8 +378,32 @@ void setup()
     yaw_tpName)); 
 }
 
+
+double DeltaYaw(double pyaw_value, double cyaw_value){
+
+  double delta = cyaw_value - pyaw_value;
+  if (delta > 180.0) delta -= 360.0;
+  else if (delta < -180.0) delta += 360;
+  return delta;
+}
+
 void loop()
-{
-  yaw_data();
-  xvel_data();  
+{ 
+    current_yaw = yaw_data(yaw_value);
+//  pyaw_msg.data = current_yaw;
+//  cyaw_msg.data = previous_yaw;
+//  RCSOFTCHECK(rcl_publish(&yaw_publisher, &pyaw_msg, NULL));
+//  RCSOFTCHECK(rcl_publish(&yaw_publisher, &cyaw_msg, NULL));
+
+    double deltaYaw = DeltaYaw(previous_yaw,current_yaw);
+    
+    cyaw_msg.data = deltaYaw;
+    RCSOFTCHECK(rcl_publish(&yaw_publisher, &cyaw_msg, NULL));
+
+    previous_yaw = current_yaw;
+  
+    xvel_value = xvel_data(xvel_value); 
+
+    xvel_msg.data = xvel_value;
+    RCSOFTCHECK(rcl_publish(&xvel_publisher, &xvel_msg, NULL));
 }

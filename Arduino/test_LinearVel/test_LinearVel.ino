@@ -22,7 +22,7 @@ const int sensorPin = 4; // Connect the RPM sensor to digital pin 2 //AttachInte
 
 volatile unsigned long pulseCount = 0;
 unsigned long lastTime = 0;
-const int sampleInterval = 1000; // Time interval for calculating RPM in milliseconds
+const int sampleInterval = 100000; // Time interval for calculating RPM in microseconds
 
 // Vehicle's Wheel Parameter
 const float wheelRadius = 0.0525; // Wheel Diameter in meter value
@@ -36,14 +36,14 @@ void setup() {
 }
 
 void loop() {
-  unsigned long currentTime = millis();
+  unsigned long currentTime = micros();
   unsigned long elapsedTime = currentTime - lastTime;
   
 // Ensure a minimum time has passed to avoid division by zero
   if (elapsedTime >= sampleInterval) {
     if (elapsedTime != 0){
 // Calculate RPM
-    int rpm = (pulseCount * 60000) / (elapsedTime); // Multiplying by 60,000 is used to convert the time from milliseconds to minutes (since there are 60,000 milliseconds in a minute)
+    int rpm = (pulseCount * 60000000) / (elapsedTime); // Multiplying by 60,000 is used to convert the time from milliseconds to minutes (since there are 60,000 milliseconds in a minute)
 
 
 // Calculate Angular Velocity of Driven Gear
