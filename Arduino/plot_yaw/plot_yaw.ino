@@ -1,13 +1,26 @@
 /****************************************************************
- * Two Sensors Combined Code::Final Edited by Alexander Hong
+ * Plotting YAW Angle with Arduino Serial Plot::Final Edited by Alexander Hong
 
  * Original Arthur::Paul Clark Based on original code by: Owen Lyke @ SparkFun Electronics 
  * Original Creation Date: April 17 2019
+
+ ***** Important note: by default the DMP functionality is disabled in the library  *****
+ * ** as the DMP firmware takes up 14301 Bytes of program memory.
+ * ** To use the DMP, you will need to:
+ * ** Edit ICM_20948_C.h
+ * ** Uncomment line 29: #define ICM_20948_USE_DMP
+ * ** Save changes
+ * ** If you are using Windows, you can find ICM_20948_C.h in:
+ * ** Documents\Arduino\libraries\SparkFun_ICM-20948_ArduinoLibrary\src\util
+ *
+ * Please see License.md for the license information.
+ *
+ * Distributed as-is; no warranty is given.
  
- * Code was Improved by Professor Benjamas Panomruttanarug "BP" 
+ ***** Code was Improved by Professor Benjamas Panomruttanarug "BP"  *****
  * Department of Control System and Instrumention Engineering "INC" @ KMUTT
  * Cosin Lab (COntrol System and INstruction Lab) 
-
+ 
  ***** Professor's Note *****
  * BP trying to combine imu (icm20948) with microros on ROS2
  * Testing with MKR zero arduino board

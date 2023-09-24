@@ -3,8 +3,21 @@
 
  * Original Arthur::Paul Clark Based on original code by: Owen Lyke @ SparkFun Electronics 
  * Original Creation Date: April 17 2019
+ * 
+ ***** Important note: by default the DMP functionality is disabled in the library  *****
+ * ** as the DMP firmware takes up 14301 Bytes of program memory.
+ * ** To use the DMP, you will need to:
+ * ** Edit ICM_20948_C.h
+ * ** Uncomment line 29: #define ICM_20948_USE_DMP
+ * ** Save changes
+ * ** If you are using Windows, you can find ICM_20948_C.h in:
+ * ** Documents\Arduino\libraries\SparkFun_ICM-20948_ArduinoLibrary\src\util
+ *
+ * Please see License.md for the license information.
+ *
+ * Distributed as-is; no warranty is given.
  
- * Code was Improved by Professor Benjamas Panomruttanarug "BP" 
+ ***** Code was Improved by Professor Benjamas Panomruttanarug "BP"  *****
  * Department of Control System and Instrumention Engineering "INC" @ KMUTT
  * Cosin Lab (COntrol System and INstruction Lab) 
 
@@ -57,6 +70,8 @@
 #include <std_msgs/msg/float32.h>
 #include <std_msgs/msg/string.h>
 #include <std_msgs/msg/int32.h>
+
+#include <math.h> // Editedby::AlexHong
 
 rclc_support_t support;
 rcl_allocator_t allocator;
@@ -151,6 +166,10 @@ double ypos_data = 0.0;             //
 
 
 // YawSensor and Linear Velocity Class::Createdby::AlexHong
+
+inline double to_radians(double degree) {
+    return degree * (M_PI / 180);
+}
 
 class YawSensor{
 
@@ -426,12 +445,14 @@ void loop()
     linearVel_msg.data = linear_value; 
     RCSOFTCHECK(rcl_publish(&linearVel_publisher, &linearVel_msg, NULL));
 
+    delay(500);
+
 // Tested::NotWorking::By::AlexHong::InitialTest::Failed::OnlyTwoPublisherWorked
-//    xpos_data += linear_value * cos(yaw_value);
+//    xpos_data += linear_value * cos(to_radians(yaw_value));
 //    xpos_msg.data = xpos_data;
 //    RCSOFTCHECK(rcl_publish(&xpos_publisher, &xpos_msg, NULL));
 //
-//    ypos_data += linear_value * sin(yaw_value);
+//    ypos_data += linear_value * sin(to_radians(yaw_value));
 //    ypos_msg.data = ypos_data;
 //    RCSOFTCHECK(rcl_publish(&ypos_publisher, &ypos_msg, NULL));
        
